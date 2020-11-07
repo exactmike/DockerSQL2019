@@ -49,7 +49,7 @@ switch ($Operation)
 
         Write-Verbose -Message "NewPassword is $PlainNewPassword"
 
-        docker exec -it $ContainerName /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $PlainInitialPassword -Q "ALTER LOGIN SA WITH PASSWORD='$PlainNewPassword'"
+        docker exec -it $ContainerName /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $PlainInitialPassword -Q "ALTER LOGIN SA WITH PASSWORD='$PlainNewPassword';"
 
     }
 }
