@@ -48,7 +48,7 @@ switch ($Operation)
         $PlainNewPassword = $NewPassword | ConvertFrom-SecureString -AsPlainText -ErrorAction Stop
 
         Write-Verbose -Message "NewPassword is $PlainNewPassword"
-        $Query = "`"ALTER LOGIN SA WITH PASSWORD='$PlainNewPassword';`""
+        $Query = "`"ALTER LOGIN SA WITH PASSWORD=`'$PlainNewPassword`';`""
         Write-Verbose -Message "Query is $Query"
 
         docker exec -it $ContainerName /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $PlainInitialPassword -Q $Query
