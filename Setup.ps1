@@ -25,6 +25,10 @@ switch ($Operation)
         {
             Throw ('Run operation requires a value for -InitiaLPassword')
         }
+        if ([string]::IsNullOrWhiteSpace($ContainerName))
+        {
+            Throw ('Run operation requires a value for -ContainerName')
+        }
         $PlainInitialPassword = $InitialPassword | ConvertFrom-SecureString -AsPlainText -ErrorAction Stop
 
         docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=$PlainInitialPassword" `
