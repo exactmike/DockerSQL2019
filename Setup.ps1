@@ -6,26 +6,46 @@ param(
     ,
     [string]$ContainerName
     ,
-    [SecureString]$ProductionPassword
+    [SecureString]$NewPassword
     ,
-    [switch]$UpdatePassword
+    [parameter(Mandatory)]
+    [ValidateSet('Pull', 'Run', 'ChangePassword')]
+    [string[]]$Operation
 )
-$PlainInitialPassword = $InitialPassword | ConvertFrom-SecureString -AsPlainText
-$PlainProductionPassword = $ProductionPassword | ConvertFrom-SecureString -AsPlainText
 
-if ($true -ne $UpdatePassword)
+switch ($Operation)
 {
-    docker pull mcr.microsoft.com/mssql/server:$ImageName
+    'Pull'
+    {
+        docker pull mcr.microsoft.com/mssql/server:$ImageName
+    }
+    'Run'
+    {
+        if ($null -eq $InitialPassword)
+        {
+            Throw ('Run operation requires a value for -InitiaLPassword')
+        }
+        $PlainInitialPassword = $InitialPassword | ConvertFrom-SecureString -AsPlainText -ErrorAction Stop
 
-    docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=$PlainInitialPassword" `
-        -p 1433:1433 --name $ContainerName `
-        --mount 'type=volume,source=sqlvolume,destination=/var/opt/mssql' `
-        -d mcr.microsoft.com/mssql/server:$ImageName
+        docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=$PlainInitialPassword" `
+            -p 1433:1433 --name $ContainerName `
+            --mount 'type=volume,source=sqlvolume,destination=/var/opt/mssql' `
+            -d mcr.microsoft.com/mssql/server:$ImageName
 
-    Write-Verbose -Message 'Sleeping for 10'
-    Start-Sleep -Seconds 10
+        Write-Verbose -Message 'Sleeping for 10'
+        Start-Sleep -Seconds 10
+    }
+    'ChangePassword'
+    {
+        if ($null -eq $InitialPassword -or $null -eq $NewPassword)
+        {
+            Throw ('ChangePassword operation requires a value for -InitiaLPassword and for -NewPassword')
+        }
+        $PlainNewPassword = $NewPassword | ConvertFrom-SecureString -AsPlainText -ErrorAction Stop
+
+        docker exec -it $ContainerName /opt/mssql-tools/bin/sqlcmd `
+            -S localhost -U SA -P $PlainInitialPassword `
+            -Q "ALTER LOGIN SA WITH PASSWORD='$PlainNewPassword'"
+
+    }
 }
-
-docker exec -it $ContainerName /opt/mssql-tools/bin/sqlcmd `
-    -S localhost -U SA -P $PlainInitialPassword `
-    -Q "ALTER LOGIN SA WITH PASSWORD='$PlainProductionPassword'"
