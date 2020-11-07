@@ -51,7 +51,7 @@ switch ($Operation)
 
         docker exec -it $ContainerName /opt/mssql-tools/bin/sqlcmd `
             -S localhost -U SA -P $PlainInitialPassword `
-            -Z $PlainNewPassword
+            -Q "ALTER LOGIN SA WITH PASSWORD='$PlainNewPassword'"
 
     }
 }
